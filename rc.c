@@ -166,12 +166,12 @@ static int Pservice_status(lua_State *L)
 	return n;
 }
 
-/** services_in_runlevel(runlevel) - List the services in a runlevel */
+/** services_in_runlevel([runlevel]) - List the services in a runlevel or all services */
 static int Pservices_in_runlevel(lua_State *L)
 {
 	int i = 1;
 	RC_STRING *item;
-	const char *runlevel = luaL_checkstring(L, 1);
+	const char *runlevel = luaL_optstring(L, 1, NULL);
 	RC_STRINGLIST *list = rc_services_in_runlevel(runlevel);
 	lua_newtable(L);
 	TAILQ_FOREACH(item, list, entries) {
