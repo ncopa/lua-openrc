@@ -59,6 +59,15 @@ static int Pservice_delete(lua_State *L)
 	return 1;
 }
 
+/** service_description(service, [option]) - Returns a description of what the service and/or option does. */
+static int Pservice_description(lua_State *L)
+{
+	const char *service = luaL_checkstring(L, 1);
+	const char *option = luaL_optstring(L, 2, NULL);
+	lua_pushstring(L, rc_service_description(service, option));
+	return 1;
+}
+
 /** service_exists(service) - Checks if a service exists or not.*/
 static int Pservice_exists(lua_State *L)
 {
@@ -94,6 +103,7 @@ static const luaL_reg R[] =
 
 	{"service_add",			Pservice_add},
 	{"service_delete",		Pservice_delete},
+	{"service_description",	Pservice_description},
 	{"service_exists",		Pservice_exists},
 	{"service_in_runlevel",		Pservice_in_runlevel},
 	{"service_resolve",		Pservice_resolve},
