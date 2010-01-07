@@ -135,6 +135,15 @@ static struct statestr states[] = {
 	{ 0, NULL },
 };
 
+static RC_SERVICE get_rcstate(const char *str)
+{
+	int i;
+	for (i = 0; states[i].state != 0; i++)
+			if (strcmp(states[i].str, str) == 0)
+				return states[i].state;
+	return 0;
+}
+
 /** service_status(service, [state]) - Return current state the service is in or test service against given state*/
 static int Pservice_status(lua_State *L)
 {
@@ -144,14 +153,7 @@ static int Pservice_status(lua_State *L)
 	RC_SERVICE svc_state = rc_service_state(service);
 	if (opt != NULL) {
 		/* return boolean if service is in give option */
-		for (i = 0; states[i].state != 0; i++) {
-			if ((strcmp(states[i].str, opt) == 0) && 
-			    (states[i].state & svc_state)) {
-				n = 1;
-				break;
-			}
-		}
-		lua_pushboolean(L, n);
+		lua_pushboolean(L, get_rcstate(opt) & svc_state);
 		return 1;
 	}
 
@@ -185,6 +187,25 @@ static int Pservices_in_runlevel(lua_State *L)
 	return 1;
 }
 
+/** services_in_state(rcstate) - List the services in a state */
+static int Pservices_in_state(lua_State *L)
+{
+	int i;
+	const char *str = luaL_checkstring(L, 1);
+	RC_STRING *item;
+	RC_STRINGLIST *list = rc_services_in_state(get_rcstate(str));
+	lua_newtable(L);
+	TAILQ_FOREACH(item, list, entries) {
+		if (item->value == NULL || item->value[0] == '\0')
+			continue;
+		lua_pushnumber(L, i++);
+		lua_pushstring(L, item->value);
+		lua_settable(L, -3);
+	}
+	rc_stringlist_free(list);
+	return 1;
+}
+	
 
 static const luaL_reg R[] =
 {
@@ -201,6 +222,7 @@ static const luaL_reg R[] =
 	{"service_extra_commands", Pservice_extra_commands},
 	{"service_status",		Pservice_status},
 	{"services_in_runlevel",Pservices_in_runlevel},
+	{"services_in_state",	Pservices_in_state},
 	{NULL,				NULL}
 };
 
