@@ -198,6 +198,17 @@ static int Pservices_in_state(lua_State *L)
 	rc_stringlist_free(list);
 	return 1;
 }
+
+/** services_scheduled(service) - List the services shceduled to start when this one does */
+static int Pservices_scheduled(lua_State *L)
+{
+	const char *service = luaL_checkstring(L, 1);
+	RC_STRINGLIST *list = rc_services_scheduled(service);
+	push_stringlist(L, list);
+	rc_stringlist_free(list);
+	return 1;
+}
+
 	
 
 static const luaL_reg R[] =
@@ -217,6 +228,7 @@ static const luaL_reg R[] =
 	{"services_in_runlevel",Pservices_in_runlevel},
 	{"services_in_runlevel_stacked",Pservices_in_runlevel_stacked},
 	{"services_in_state",	Pservices_in_state},
+	{"services_scheduled",	Pservices_scheduled},
 	{NULL,				NULL}
 };
 
