@@ -130,10 +130,11 @@ static struct statestr states[] = {
 	{ RC_SERVICE_INACTIVE, "inactive" },
 	{ RC_SERVICE_HOTPLUGGED, "hotplugged" },
 	{ RC_SERVICE_FAILED,	"failed" },
-	{ RC_SERVICE_SCHEDULED, "sceduled" },
-	{ RC_SERVICE_WASINACTIVE, "was inactive" },
+	{ RC_SERVICE_SCHEDULED, "scheduled" },
+	{ RC_SERVICE_WASINACTIVE, "wasinactive" },
 	{ 0, NULL },
 };
+
 
 static RC_SERVICE get_rcstate(const char *str)
 {
@@ -142,6 +143,19 @@ static RC_SERVICE get_rcstate(const char *str)
 			if (strcmp(states[i].str, str) == 0)
 				return states[i].state;
 	return 0;
+}
+
+/** service_states() - List all available states */
+static int Pservice_states(lua_State *L)
+{
+	int i;
+	lua_newtable(L);
+	for (i = 0; states[i].state != 0; i++) {
+		lua_pushnumber(L, i+1);
+		lua_pushstring(L, states[i].str);
+		lua_settable(L, -3);
+	}
+	return 1;	
 }
 
 /** service_status(service, [state]) - Return current state the service is in or test service against given state*/
@@ -217,6 +231,13 @@ static int Pservice_daemons_crashed(lua_State *L)
 	return 1;
 }
 
+/** sys() - name system type (i.e VSERVER, OPENVZ, UML...) */
+static int Psys(lua_State *L)
+{
+	lua_pushstring(L, rc_sys());
+	return 1;
+}
+
 static const luaL_reg R[] =
 {
 	{"runlevel_get", 		Prunlevel_get},
@@ -230,12 +251,14 @@ static const luaL_reg R[] =
 	{"service_in_runlevel",		Pservice_in_runlevel},
 	{"service_resolve",		Pservice_resolve},
 	{"service_extra_commands", Pservice_extra_commands},
+	{"service_states",		Pservice_states},
 	{"service_status",		Pservice_status},
 	{"services_in_runlevel",Pservices_in_runlevel},
 	{"services_in_runlevel_stacked",Pservices_in_runlevel_stacked},
 	{"services_in_state",	Pservices_in_state},
 	{"services_scheduled",	Pservices_scheduled},
 	{"service_daemons_crashed", Pservice_daemons_crashed},
+	{"sys",					Psys},
 	{NULL,				NULL}
 };
 
