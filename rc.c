@@ -95,6 +95,26 @@ static int Pservice_resolve(lua_State *L)
 	return 1;
 }
 
+/** service_extra_commands(service) - Lists the extra commands a service has. */
+static int Pservice_extra_commands(lua_State *L)
+{
+	int i = 1;
+	RC_STRING *item;
+	const char *service = luaL_checkstring(L, 1);
+	RC_STRINGLIST *list = rc_service_extra_commands(service);
+	lua_newtable(L);
+	TAILQ_FOREACH(item, list, entries) {
+		if (item->value == NULL || item->value[0] == '\0')
+			continue;
+		lua_pushnumber(L, i++);
+		lua_pushstring(L, item->value);
+		lua_settable(L, -3);
+	}
+	rc_stringlist_free(list);
+	return 1;
+}
+
+
 static const luaL_reg R[] =
 {
 	{"runlevel_get", 		Prunlevel_get},
@@ -107,6 +127,7 @@ static const luaL_reg R[] =
 	{"service_exists",		Pservice_exists},
 	{"service_in_runlevel",		Pservice_in_runlevel},
 	{"service_resolve",		Pservice_resolve},
+	{"service_extra_commands", Pservice_extra_commands},
 	{NULL,				NULL}
 };
 
