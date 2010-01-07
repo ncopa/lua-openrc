@@ -11,6 +11,22 @@
 #define MYNAME		"rc"
 #define MYVERSION	"OpenRC library for " LUA_VERSION " / Jan 2010"
 
+/* convert RC_STRINGLIST to a lua table on the stack */
+static int push_stringlist(lua_State *L, RC_STRINGLIST *list)
+{
+	int i = 0;
+	RC_STRING *item;
+	lua_newtable(L);
+	TAILQ_FOREACH(item, list, entries) {
+		if (item->value == NULL || item->value[0] == '\0')
+			continue;
+		lua_pushnumber(L, ++i);
+		lua_pushstring(L, item->value);
+		lua_settable(L, -3);
+	}
+	return i;
+}
+
 /** runlevel_get() - Return the current runlevel. */
 static int Prunlevel_get(lua_State *L)
 {
@@ -28,15 +44,8 @@ static int Prunlevel_exists(lua_State *L)
 /** runlevel_list() - Return a list of runlevels. */
 static int Prunlevel_list(lua_State *L)
 {
-	int i = 1;
-	RC_STRING *item;
 	RC_STRINGLIST *list = rc_runlevel_list();
-	lua_newtable(L);
-	TAILQ_FOREACH(item, list, entries) {
-		lua_pushnumber(L, i++);
-		lua_pushstring(L, item->value);
-		lua_settable(L, -3);
-	}
+	push_stringlist(L, list);
 	rc_stringlist_free(list);
 	return 1;
 }
@@ -83,7 +92,7 @@ static int Pservice_exists(lua_State *L)
 static int Pservice_in_runlevel(lua_State *L)
 {
 	const char *service, *runlevel;
-	service =luaL_checkstring(L, 1);
+	service = luaL_checkstring(L, 1);
 	runlevel = luaL_optstring(L, 2, rc_runlevel_get());
 	lua_pushboolean(L, rc_service_in_runlevel(service, runlevel));
 	return 1;
@@ -101,18 +110,9 @@ static int Pservice_resolve(lua_State *L)
 /** service_extra_commands(service) - Lists the extra commands a service has. */
 static int Pservice_extra_commands(lua_State *L)
 {
-	int i = 1;
-	RC_STRING *item;
 	const char *service = luaL_checkstring(L, 1);
 	RC_STRINGLIST *list = rc_service_extra_commands(service);
-	lua_newtable(L);
-	TAILQ_FOREACH(item, list, entries) {
-		if (item->value == NULL || item->value[0] == '\0')
-			continue;
-		lua_pushnumber(L, i++);
-		lua_pushstring(L, item->value);
-		lua_settable(L, -3);
-	}
+	push_stringlist(L, list);
 	rc_stringlist_free(list);
 	return 1;
 }
@@ -171,37 +171,30 @@ static int Pservice_status(lua_State *L)
 /** services_in_runlevel([runlevel]) - List the services in a runlevel or all services */
 static int Pservices_in_runlevel(lua_State *L)
 {
-	int i = 1;
-	RC_STRING *item;
 	const char *runlevel = luaL_optstring(L, 1, NULL);
 	RC_STRINGLIST *list = rc_services_in_runlevel(runlevel);
-	lua_newtable(L);
-	TAILQ_FOREACH(item, list, entries) {
-		if (item->value == NULL || item->value[0] == '\0')
-			continue;
-		lua_pushnumber(L, i++);
-		lua_pushstring(L, item->value);
-		lua_settable(L, -3);
-	}
+	push_stringlist(L, list);
 	rc_stringlist_free(list);
 	return 1;
 }
 
+/** services_in_runlevel_stacked([runlevel]) - List the stacked services in a runlevel */
+static int Pservices_in_runlevel_stacked(lua_State *L)
+{
+	const char *runlevel = luaL_optstring(L, 1, NULL);
+	RC_STRINGLIST *list = rc_services_in_runlevel_stacked(runlevel);
+	push_stringlist(L, list);
+	rc_stringlist_free(list);
+	return 1;
+}
+
+
 /** services_in_state(rcstate) - List the services in a state */
 static int Pservices_in_state(lua_State *L)
 {
-	int i;
 	const char *str = luaL_checkstring(L, 1);
-	RC_STRING *item;
 	RC_STRINGLIST *list = rc_services_in_state(get_rcstate(str));
-	lua_newtable(L);
-	TAILQ_FOREACH(item, list, entries) {
-		if (item->value == NULL || item->value[0] == '\0')
-			continue;
-		lua_pushnumber(L, i++);
-		lua_pushstring(L, item->value);
-		lua_settable(L, -3);
-	}
+	push_stringlist(L, list);
 	rc_stringlist_free(list);
 	return 1;
 }
@@ -222,6 +215,7 @@ static const luaL_reg R[] =
 	{"service_extra_commands", Pservice_extra_commands},
 	{"service_status",		Pservice_status},
 	{"services_in_runlevel",Pservices_in_runlevel},
+	{"services_in_runlevel_stacked",Pservices_in_runlevel_stacked},
 	{"services_in_state",	Pservices_in_state},
 	{NULL,				NULL}
 };
