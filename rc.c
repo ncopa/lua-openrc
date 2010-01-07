@@ -114,6 +114,41 @@ static int Pservice_extra_commands(lua_State *L)
 	return 1;
 }
 
+struct statestr {
+	RC_SERVICE state;
+	const char *str;
+};
+
+static struct statestr states[] = {
+	{ RC_SERVICE_STOPPED, "stopped" },
+	{ RC_SERVICE_STARTED, "started" },
+	{ RC_SERVICE_STOPPING, "stopping" },
+	{ RC_SERVICE_STARTING, "starting" },
+	{ RC_SERVICE_INACTIVE, "inactive" },
+	{ RC_SERVICE_HOTPLUGGED, "hotplugged" },
+	{ RC_SERVICE_FAILED,	"failed" },
+	{ RC_SERVICE_SCHEDULED, "sceduled" },
+	{ RC_SERVICE_WASINACTIVE, "was inactive" },
+	{ 0, NULL },
+};
+
+/** service_status(service) - Return of a table with states the service is in */
+static int Pservice_status(lua_State *L)
+{
+	int i;
+	const char *service = luaL_checkstring(L, 1);
+	RC_SERVICE state = rc_service_state(service);
+	lua_newtable(L);
+	for (i = 0; states[i].state != 0; i++) {
+		if (state & states[i].state) {
+			lua_pushstring(L, states[i].str);
+			lua_pushboolean(L, 1);
+			lua_settable(L, -3);
+		}
+	}
+	return 1;
+}
+
 
 static const luaL_reg R[] =
 {
@@ -128,22 +163,22 @@ static const luaL_reg R[] =
 	{"service_in_runlevel",		Pservice_in_runlevel},
 	{"service_resolve",		Pservice_resolve},
 	{"service_extra_commands", Pservice_extra_commands},
+	{"service_status", Pservice_status},
 	{NULL,				NULL}
 };
 
-#define set_const(key, value)		\
+#define set_literal(key, value)		\
 	lua_pushliteral(L, key);	\
-	lua_pushnumber(L, value);	\
+	lua_pushliteral(L, value);	\
 	lua_settable(L, -3)
 
 LUALIB_API int luaopen_rc (lua_State *L)
 {
 	luaL_register(L, MYNAME, R);
 
-	lua_pushliteral(L,"version");		/** version */
-	lua_pushliteral(L,MYVERSION);
-	lua_settable(L,-3);
-	
+	set_literal("version", MYVERSION);	/** version */
+	set_literal("initdir", RC_INITDIR);	/** initdir */
+	set_literal("confdir", RC_CONFDIR); /** confdir */
 	return 1;
 }
 
