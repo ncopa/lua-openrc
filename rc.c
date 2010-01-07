@@ -1,9 +1,12 @@
 
+#include <string.h>
+
+#include <rc.h>
+
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
 
-#include <rc.h>
 
 #define MYNAME		"rc"
 #define MYVERSION	"OpenRC library for " LUA_VERSION " / Jan 2010"
@@ -132,21 +135,35 @@ static struct statestr states[] = {
 	{ 0, NULL },
 };
 
-/** service_status(service) - Return of a table with states the service is in */
+/** service_status(service, [state]) - Return current state the service is in or test service against given state*/
 static int Pservice_status(lua_State *L)
 {
-	int i;
+	int i, n = 0;
 	const char *service = luaL_checkstring(L, 1);
-	RC_SERVICE state = rc_service_state(service);
+	const char *opt = luaL_optstring(L, 2, NULL);
+	RC_SERVICE svc_state = rc_service_state(service);
+	if (opt != NULL) {
+		/* return boolean if service is in give option */
+		for (i = 0; states[i].state != 0; i++) {
+			if ((strcmp(states[i].str, opt) == 0) && 
+			    (states[i].state & svc_state)) {
+				n = 1;
+				break;
+			}
+		}
+		lua_pushboolean(L, n);
+		return 1;
+	}
+
+	/* return all states that given service is in */	
 	lua_newtable(L);
 	for (i = 0; states[i].state != 0; i++) {
-		if (state & states[i].state) {
+		if (svc_state & states[i].state) {
 			lua_pushstring(L, states[i].str);
-			lua_pushboolean(L, 1);
-			lua_settable(L, -3);
+			n++;
 		}
 	}
-	return 1;
+	return n;
 }
 
 
