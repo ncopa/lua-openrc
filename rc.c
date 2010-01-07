@@ -209,7 +209,13 @@ static int Pservices_scheduled(lua_State *L)
 	return 1;
 }
 
-	
+/** service_daemons_crashed(service) - Checks that all daemons started with start-stop-daemon by the service are still running. */
+static int Pservice_daemons_crashed(lua_State *L)
+{
+	const char *service = luaL_checkstring(L, 1);
+	lua_pushboolean(L, rc_service_daemons_crashed(service));
+	return 1;
+}
 
 static const luaL_reg R[] =
 {
@@ -229,6 +235,7 @@ static const luaL_reg R[] =
 	{"services_in_runlevel_stacked",Pservices_in_runlevel_stacked},
 	{"services_in_state",	Pservices_in_state},
 	{"services_scheduled",	Pservices_scheduled},
+	{"service_daemons_crashed", Pservice_daemons_crashed},
 	{NULL,				NULL}
 };
 
