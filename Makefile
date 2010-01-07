@@ -1,9 +1,12 @@
 
+VERSION = 0.1
+
 OBJS = rc.o
 LIBS = -lrc
 
 DEBUGFLAGS = -g -Wall -Werror
 CFLAGS += $(DEBUGFLAGS)
+CFLAGS += -DVERSION=\"$(VERSION)\"
 
 LDFLAGS += -L/lib
 

@@ -9,7 +9,7 @@
 
 
 #define MYNAME		"rc"
-#define MYVERSION	"OpenRC library for " LUA_VERSION " / Jan 2010"
+#define MYVERSION	"OpenRC library for " LUA_VERSION " version " VERSION
 
 /* convert RC_STRINGLIST to a lua table on the stack */
 static int push_stringlist(lua_State *L, RC_STRINGLIST *list)
