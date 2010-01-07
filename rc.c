@@ -166,6 +166,25 @@ static int Pservice_status(lua_State *L)
 	return n;
 }
 
+/** services_in_runlevel(runlevel) - List the services in a runlevel */
+static int Pservices_in_runlevel(lua_State *L)
+{
+	int i = 1;
+	RC_STRING *item;
+	const char *runlevel = luaL_checkstring(L, 1);
+	RC_STRINGLIST *list = rc_services_in_runlevel(runlevel);
+	lua_newtable(L);
+	TAILQ_FOREACH(item, list, entries) {
+		if (item->value == NULL || item->value[0] == '\0')
+			continue;
+		lua_pushnumber(L, i++);
+		lua_pushstring(L, item->value);
+		lua_settable(L, -3);
+	}
+	rc_stringlist_free(list);
+	return 1;
+}
+
 
 static const luaL_reg R[] =
 {
@@ -180,7 +199,8 @@ static const luaL_reg R[] =
 	{"service_in_runlevel",		Pservice_in_runlevel},
 	{"service_resolve",		Pservice_resolve},
 	{"service_extra_commands", Pservice_extra_commands},
-	{"service_status", Pservice_status},
+	{"service_status",		Pservice_status},
+	{"services_in_runlevel",Pservices_in_runlevel},
 	{NULL,				NULL}
 };
 
