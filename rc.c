@@ -7,6 +7,9 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
+#if LUA_VERSION_NUM < 502
+# define luaL_newlib(L,l) (lua_newtable(L), luaL_register(L,NULL,l))
+#endif
 
 #define MYNAME		"rc"
 #define MYVERSION	"OpenRC library for " LUA_VERSION " version " VERSION
@@ -238,7 +241,7 @@ static int Psys(lua_State *L)
 	return 1;
 }
 
-static const luaL_reg R[] =
+static const luaL_Reg R[] =
 {
 	{"runlevel_get", 		Prunlevel_get},
 	{"runlevel_exists",		Prunlevel_exists},
@@ -269,7 +272,7 @@ static const luaL_reg R[] =
 
 LUALIB_API int luaopen_rc (lua_State *L)
 {
-	luaL_register(L, MYNAME, R);
+	luaL_newlib(L, R);
 
 	set_literal("version", MYVERSION);	/** version */
 	set_literal("initdir", RC_INITDIR);	/** initdir */
