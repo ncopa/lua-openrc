@@ -8,14 +8,16 @@ else
 FULL_VERSION    := $(VERSION)
 endif
 
-
-
+LUA_VERSION=5.2
+LUA_PKG=lua$(LUA_VERSION)
+LUA_CFLAGS=$(shell pkg-config --cflags $(LUA_PKG))
 OBJS = rc.o
 LIBS = -lrc
 
 DEBUGFLAGS = -g -Wall -Werror
 CFLAGS += $(DEBUGFLAGS)
 CFLAGS += -DVERSION=\"$(FULL_VERSION)\"
+CFLAGS += $(LUA_CFLAGS)
 
 LDFLAGS += -L/lib
 
