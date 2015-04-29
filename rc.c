@@ -1,4 +1,5 @@
 
+#include <sys/queue.h>
 #include <string.h>
 
 #include <rc.h>
